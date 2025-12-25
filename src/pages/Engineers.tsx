@@ -30,7 +30,7 @@ export default function Engineers() {
         name: eng.name || eng.full_name,
         phone: eng.phone || eng.contact_number,
         status: eng.status,
-        skill_category: eng.skill_category,
+        skill_category: eng.skill_category || [],
         specializations: eng.specializations || [],
         preferred_city: eng.preferred_city,
       }));
@@ -102,8 +102,8 @@ export default function Engineers() {
                 className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
+                <option value="">Pending</option>
+               
                 <option value="verified">Verified</option>
                 <option value="rejected">Rejected</option>
               </select>

@@ -1,11 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; 
 import { useParams, useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DocumentPreview } from "@/components/engineers/DocumentPreview";
 import { ActionButtons } from "@/components/engineers/ActionButtons";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, Phone, User, Shield, CreditCard, AlertCircle, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  User,
+  Shield,
+  CreditCard,
+  AlertCircle,
+  Loader2,
+  MapPin,
+  Map,
+  Badge 
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EngineerDetails } from "@/types/engineer";
 import { api } from "@/lib/api";
@@ -20,14 +32,12 @@ export default function EngineerDetail() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (userId) {
-      fetchEngineerDetails();
-    }
+    if (userId) fetchEngineerDetails();
   }, [userId]);
 
   const fetchEngineerDetails = async () => {
     if (!userId) return;
-    
+
     setIsFetching(true);
     setError(null);
     try {
@@ -47,7 +57,7 @@ export default function EngineerDetail() {
 
   const handleApprove = async () => {
     if (!userId) return;
-    
+
     setIsLoading(true);
     try {
       const response = await api.approveEngineer(userId);
@@ -69,7 +79,7 @@ export default function EngineerDetail() {
 
   const handleReject = async (remarks?: string) => {
     if (!userId) return;
-    
+
     setIsLoading(true);
     try {
       const response = await api.rejectEngineer(userId, remarks);
@@ -106,11 +116,7 @@ export default function EngineerDetail() {
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-lg font-medium">{error || "Engineer not found"}</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => navigate("/engineers")}
-            >
+            <Button variant="outline" className="mt-4" onClick={() => navigate("/engineers")}>
               Go back to Engineers
             </Button>
           </div>
@@ -132,18 +138,10 @@ export default function EngineerDetail() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-foreground">
-              {engineer.profile?.name || "Unknown Engineer"}
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Review and manage engineer verification
-            </p>
+            <h1 className="text-3xl font-bold text-foreground">{engineer.profile?.name || "Unknown Engineer"}</h1>
+            <p className="text-muted-foreground mt-1">Review and manage engineer verification</p>
           </div>
-          <ActionButtons
-            onApprove={handleApprove}
-            onReject={handleReject}
-            isLoading={isLoading}
-          />
+          <ActionButtons onApprove={handleApprove} onReject={handleReject} isLoading={isLoading} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -154,25 +152,59 @@ export default function EngineerDetail() {
                 <User className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="font-semibold">Profile</h2>
+                <h2 className="font-semibold">{engineer.profile?.name || "No Name"}</h2>
                 <StatusBadge status={engineer.profile?.status} />
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 text-sm">
+            <div className="space-y-4 text-sm">
+              <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-muted-foreground" />
-                <span>{engineer.user.email}</span>
+                <span>{engineer.profile.email}</span>
               </div>
-              <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-muted-foreground" />
                 <span>{engineer.profile?.phone || "Not provided"}</span>
               </div>
+              <div className="flex items-center gap-3">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span>{engineer.profile?.preferred_city || "Not provided"}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Map className="w-4 h-4 text-muted-foreground" />
+                <span>{engineer.profile?.current_location || "Not provided"}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge variant={engineer.profile?.isAvailable ? "success" : "secondary"}>
+                  {engineer.profile?.isAvailable ? "Available" : "Not Available"}
+                </Badge>
+              </div>
+
+              {engineer.profile?.skills?.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    {engineer.profile.skills.map((skill: string, index: number) => (
+                      <span key={index} className="px-2 py-1 text-xs rounded bg-muted">{skill}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {engineer.profile?.specializations?.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Specializations</p>
+                  <div className="flex flex-wrap gap-2">
+                    {engineer.profile.specializations.map((spec: string, index: number) => (
+                      <span key={index} className="px-2 py-1 text-xs rounded bg-primary/10 text-primary">{spec}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="pt-4 border-t border-border/50">
                 <p className="text-xs text-muted-foreground mb-1">User ID</p>
-                <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                  {engineer.user.id}
-                </code>
+                <code className="text-xs font-mono bg-muted px-2 py-1 rounded">{engineer.user.id}</code>
               </div>
             </div>
           </div>
@@ -191,14 +223,14 @@ export default function EngineerDetail() {
 
             {engineer.kyc ? (
               <div className="space-y-4">
-                <DocumentPreview
-                  url={engineer.kyc.photo_file}
-                  label="Photo ID"
-                />
-                <DocumentPreview
-                  url={engineer.kyc.address_proof_file}
-                  label="Address Proof"
-                />
+                <DocumentPreview url={engineer.kyc.photo_file} label="Photo ID" />
+                <DocumentPreview url={engineer.kyc.address_proof_file} label="Address Proof" />
+                {engineer.kyc.aadhaar_number && (
+                  <p className="text-sm">Aadhaar: {engineer.kyc.aadhaar_number}</p>
+                )}
+                {engineer.kyc.pan_number && (
+                  <p className="text-sm">PAN NUMBER: {engineer.kyc.pan_number}</p>
+                )}
                 {engineer.kyc.remarks && (
                   <div className="p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                     <p className="text-xs text-muted-foreground mb-1">Remarks</p>
@@ -228,10 +260,10 @@ export default function EngineerDetail() {
 
             {engineer.bank ? (
               <div className="space-y-4">
-                <DocumentPreview
-                  url={engineer.bank.proof_file}
-                  label="Bank Proof"
-                />
+                <DocumentPreview url={engineer.bank.proof_file} label="Bank Proof" />
+                {engineer.bank.account_number && (
+                  <p className="text-sm">Account: {engineer.bank.account_number}</p>
+                )}
                 {engineer.bank.remarks && (
                   <div className="p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                     <p className="text-xs text-muted-foreground mb-1">Remarks</p>

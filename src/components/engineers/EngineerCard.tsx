@@ -29,15 +29,15 @@ export function EngineerCard({ engineer }: EngineerCardProps) {
             </h3>
             <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5" />
-                {engineer.user?.email || "No email"}
+                {/* <Mail className="w-3.5 h-3.5" /> */}
+                {engineer.user?.role || "No email"}
               </span>
-              {phone && (
+              {/* {phone && (
                 <span className="flex items-center gap-1">
                   <Phone className="w-3.5 h-3.5" />
                   {phone}
                 </span>
-              )}
+              )} */}
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 const API_BASE_URL = "https://engineer-xkt8.onrender.com";
+// const API_BASE_URL = "http://localhost:8000";
 
 class ApiClient {
   private token: string | null = null;
@@ -52,10 +53,10 @@ class ApiClient {
     return response.json();
   }
 
-  // Auth endpoints - OTP based
+  // Auth endpoints - OTP based (uses /auth/register for admin bypass)
   async sendOtp(mobile: string) {
     return this.request<{ identifier: string; is_new_user: boolean; message: string }>(
-      "/auth/send-otp",
+      "/auth/register",
       {
         method: "POST",
         body: JSON.stringify({ mode: "mobile", mobile }),
@@ -84,7 +85,7 @@ class ApiClient {
     return this.request<{ message: string }>("/admin/");
   }
 
-  async getEngineers() {
+ async getEngineers() {
     return this.request<any[]>("/admin/engineers");
   }
 
