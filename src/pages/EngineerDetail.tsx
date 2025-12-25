@@ -1,65 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DocumentPreview } from "@/components/engineers/DocumentPreview";
 import { ActionButtons } from "@/components/engineers/ActionButtons";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, Phone, User, Shield, CreditCard, AlertCircle } from "lucide-react";
+import { ArrowLeft, Mail, Phone, User, Shield, CreditCard, AlertCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EngineerDetails } from "@/types/engineer";
-
-// Mock data - replace with API call
-const mockEngineerDetails: EngineerDetails = {
-  user: {
-    id: "user1",
-    email: "rajesh.kumar@email.com",
-    role: "engineer",
-  },
-  profile: {
-    id: "profile1",
-    name: "Rajesh Kumar",
-    phone: "+91 98765 43210",
-    status: "pending",
-  },
-  kyc: {
-    id: "kyc1",
-    status: "pending",
-    remarks: null,
-    photo_file: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-    address_proof_file: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=400&fit=crop",
-  },
-  bank: {
-    id: "bank1",
-    status: "pending",
-    remarks: null,
-    proof_file: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=400&fit=crop",
-  },
-};
+import { api } from "@/lib/api";
 
 export default function EngineerDetail() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [engineer, setEngineer] = useState<EngineerDetails | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // In real app, fetch data based on userId
-  const engineer = mockEngineerDetails;
+  useEffect(() => {
+    if (userId) {
+      fetchEngineerDetails();
+    }
+  }, [userId]);
+
+  const fetchEngineerDetails = async () => {
+    if (!userId) return;
+    
+    setIsFetching(true);
+    setError(null);
+    try {
+      const data = await api.getEngineerDetails(userId);
+      setEngineer(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch engineer details");
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to fetch engineer details",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   const handleApprove = async () => {
+    if (!userId) return;
+    
     setIsLoading(true);
     try {
-      // API call would go here
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await api.approveEngineer(userId);
       toast({
         title: "Engineer Approved",
-        description: "The engineer has been approved and synced successfully.",
+        description: response.message || "The engineer has been approved and synced successfully.",
       });
       navigate("/engineers");
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to approve engineer. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to approve engineer. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -68,19 +68,20 @@ export default function EngineerDetail() {
   };
 
   const handleReject = async (remarks?: string) => {
+    if (!userId) return;
+    
     setIsLoading(true);
     try {
-      // API call would go here
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await api.rejectEngineer(userId, remarks);
       toast({
         title: "Engineer Rejected",
-        description: "The engineer application has been rejected.",
+        description: response.message || "The engineer application has been rejected.",
       });
       navigate("/engineers");
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to reject engineer. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to reject engineer. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -88,13 +89,30 @@ export default function EngineerDetail() {
     }
   };
 
-  if (!engineer) {
+  if (isFetching) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error || !engineer) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg font-medium">Engineer not found</p>
+            <p className="text-lg font-medium">{error || "Engineer not found"}</p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => navigate("/engineers")}
+            >
+              Go back to Engineers
+            </Button>
           </div>
         </div>
       </AdminLayout>
