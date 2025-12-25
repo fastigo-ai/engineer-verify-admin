@@ -1,14 +1,38 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { Users, FileCheck, CheckCircle, Clock } from "lucide-react";
-
-const stats = [
-  { label: "Total Engineers", value: "248", icon: Users, trend: "+12 this week" },
-  { label: "Pending Reviews", value: "23", icon: Clock, trend: "5 urgent" },
-  { label: "Approved Today", value: "8", icon: CheckCircle, trend: "+3 from yesterday" },
-  { label: "KYC Submissions", value: "15", icon: FileCheck, trend: "7 awaiting review" },
-];
+import { Users, FileCheck, CheckCircle, Clock, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function Dashboard() {
+  const [engineers, setEngineers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await api.getEngineers();
+        setEngineers(data);
+      } catch (error) {
+        console.error("Failed to fetch engineers:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const totalEngineers = engineers.length;
+  const pendingCount = engineers.filter((e) => e.status === "pending").length;
+  const approvedCount = engineers.filter((e) => e.status === "approved" || e.status === "verified").length;
+
+  const stats = [
+    { label: "Total Engineers", value: isLoading ? "..." : totalEngineers.toString(), icon: Users, trend: "All registered" },
+    { label: "Pending Reviews", value: isLoading ? "..." : pendingCount.toString(), icon: Clock, trend: "Awaiting action" },
+    { label: "Approved", value: isLoading ? "..." : approvedCount.toString(), icon: CheckCircle, trend: "Verified engineers" },
+    { label: "KYC Submissions", value: isLoading ? "..." : totalEngineers.toString(), icon: FileCheck, trend: "Total submissions" },
+  ];
+
   return (
     <AdminLayout>
       <div className="animate-slide-up">
@@ -23,7 +47,9 @@ export default function Dashboard() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-3xl font-bold text-foreground mt-1">{stat.value}</p>
+                  <p className="text-3xl font-bold text-foreground mt-1">
+                    {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : stat.value}
+                  </p>
                   <p className="text-xs text-primary mt-2">{stat.trend}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -36,53 +62,60 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-            <div className="space-y-4">
-              {[
-                { action: "Engineer approved", name: "Rajesh Kumar", time: "2 min ago", type: "approved" },
-                { action: "KYC submitted", name: "Priya Sharma", time: "15 min ago", type: "pending" },
-                { action: "Bank verified", name: "Amit Singh", time: "1 hour ago", type: "approved" },
-                { action: "Engineer rejected", name: "Suresh Patel", time: "2 hours ago", type: "rejected" },
-              ].map((activity, i) => (
-                <div key={i} className="flex items-center gap-4 py-3 border-b border-border/30 last:border-0">
-                  <div className={`w-2 h-2 rounded-full ${
-                    activity.type === 'approved' ? 'bg-success' :
-                    activity.type === 'rejected' ? 'bg-destructive' :
-                    'bg-warning'
-                  }`} />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.name}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{activity.time}</span>
-                </div>
-              ))}
-            </div>
+            <h2 className="text-lg font-semibold mb-4">Recent Engineers</h2>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : engineers.length > 0 ? (
+              <div className="space-y-4">
+                {engineers.slice(0, 5).map((eng, i) => (
+                  <Link
+                    key={eng.id || i}
+                    to={`/engineers/${eng.user_id}`}
+                    className="flex items-center gap-4 py-3 border-b border-border/30 last:border-0 hover:bg-secondary/50 -mx-2 px-2 rounded-lg transition-colors"
+                  >
+                    <div className={`w-2 h-2 rounded-full ${
+                      eng.status === 'approved' || eng.status === 'verified' ? 'bg-success' :
+                      eng.status === 'rejected' ? 'bg-destructive' :
+                      'bg-warning'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{eng.name || eng.full_name || "Unknown"}</p>
+                      <p className="text-xs text-muted-foreground">{eng.user?.email || eng.email}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground capitalize">{eng.status}</span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm text-center py-8">No engineers found</p>
+            )}
           </div>
 
           <div className="glass-card p-6">
             <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
             <div className="grid grid-cols-2 gap-4">
-              <button className="p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left">
+              <Link to="/engineers" className="p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left">
                 <Users className="w-5 h-5 text-primary mb-2" />
                 <p className="font-medium text-sm">View Engineers</p>
                 <p className="text-xs text-muted-foreground">Manage all engineers</p>
-              </button>
-              <button className="p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left">
+              </Link>
+              <Link to="/engineers?status=pending" className="p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left">
                 <Clock className="w-5 h-5 text-warning mb-2" />
                 <p className="font-medium text-sm">Pending Reviews</p>
-                <p className="text-xs text-muted-foreground">23 awaiting action</p>
-              </button>
-              <button className="p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left">
+                <p className="text-xs text-muted-foreground">{pendingCount} awaiting action</p>
+              </Link>
+              <Link to="/engineers" className="p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left">
                 <FileCheck className="w-5 h-5 text-success mb-2" />
                 <p className="font-medium text-sm">KYC Queue</p>
                 <p className="text-xs text-muted-foreground">Review submissions</p>
-              </button>
-              <button className="p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left">
+              </Link>
+              <Link to="/engineers?status=approved" className="p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left">
                 <CheckCircle className="w-5 h-5 text-primary mb-2" />
-                <p className="font-medium text-sm">Bulk Approve</p>
-                <p className="text-xs text-muted-foreground">Process multiple</p>
-              </button>
+                <p className="font-medium text-sm">Approved</p>
+                <p className="text-xs text-muted-foreground">{approvedCount} verified</p>
+              </Link>
             </div>
           </div>
         </div>

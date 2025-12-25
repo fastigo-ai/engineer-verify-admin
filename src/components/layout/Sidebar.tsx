@@ -1,16 +1,22 @@
-import { Link, useLocation } from "react-router-dom";
-import { Users, LayoutDashboard, Shield, FileCheck, Settings } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Users, LayoutDashboard, Shield, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Engineers", path: "/engineers" },
-  { icon: FileCheck, label: "KYC Reviews", path: "/kyc" },
-  { icon: Shield, label: "Bank Verification", path: "/bank" },
-  { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
@@ -29,7 +35,7 @@ export function Sidebar() {
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || 
-            (item.path !== "/" && location.pathname.startsWith(item.path));
+            (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
           
           return (
             <Link
@@ -45,15 +51,14 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <span className="text-xs font-medium">AD</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Admin User</p>
-            <p className="text-xs text-muted-foreground truncate">admin@company.com</p>
-          </div>
-        </div>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={handleLogout}
+        >
+          <LogOut className="w-5 h-5" />
+          <span>Logout</span>
+        </Button>
       </div>
     </aside>
   );
