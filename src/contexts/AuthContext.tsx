@@ -1,11 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { api } from "@/lib/api";
-import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  sendOtp: (mobile: string) => Promise<{ identifier: string; is_new_user: boolean; message: string }>;
+  verifyOtp: (identifier: string, otp: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -36,8 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
-    await api.login(email, password);
+  const sendOtp = async (mobile: string) => {
+    return api.sendOtp(mobile);
+  };
+
+  const verifyOtp = async (identifier: string, otp: string) => {
+    await api.verifyOtp(identifier, otp);
     setIsAuthenticated(true);
   };
 
@@ -47,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, sendOtp, verifyOtp, logout }}>
       {children}
     </AuthContext.Provider>
   );

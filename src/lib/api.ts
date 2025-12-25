@@ -52,28 +52,27 @@ class ApiClient {
     return response.json();
   }
 
-  // Auth endpoints
-  async login(email: string, password: string) {
-    const formData = new URLSearchParams();
-    formData.append("username", email);
-    formData.append("password", password);
+  // Auth endpoints - OTP based
+  async sendOtp(mobile: string) {
+    return this.request<{ identifier: string; is_new_user: boolean; message: string }>(
+      "/auth/send-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ mode: "mobile", mobile }),
+      }
+    );
+  }
 
-    const response = await fetch(`${API_BASE_URL}/token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: "Login failed" }));
-      throw new Error(error.detail || "Invalid credentials");
-    }
-
-    const data = await response.json();
-    this.setToken(data.access_token);
-    return data;
+  async verifyOtp(identifier: string, otp: string) {
+    const response = await this.request<{ access_token: string }>(
+      "/auth/verify-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ identifier, otp }),
+      }
+    );
+    this.setToken(response.access_token);
+    return response;
   }
 
   logout() {
