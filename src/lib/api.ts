@@ -1,6 +1,10 @@
 const API_BASE_URL = "https://engineer-xkt8.onrender.com";
 // const API_BASE_URL = "http://localhost:8000";
 
+import { Engineer, EngineerDetails } from "@/types/engineer";
+
+// const API_BASE_URL = "https://engineer-xkt8.onrender.com";
+
 class ApiClient {
   private token: string | null = null;
 
@@ -53,7 +57,7 @@ class ApiClient {
     return response.json();
   }
 
-  // Auth endpoints - OTP based (uses /auth/register for admin bypass)
+  // Auth endpoints - OTP based
   async sendOtp(mobile: string) {
     return this.request<{ identifier: string; is_new_user: boolean; message: string }>(
       "/auth/register",
@@ -85,28 +89,12 @@ class ApiClient {
     return this.request<{ message: string }>("/admin/");
   }
 
- async getEngineers() {
-    return this.request<any[]>("/admin/engineers");
+  async getEngineers() {
+    return this.request<Engineer[]>("/admin/engineers");
   }
 
   async getEngineerDetails(userId: string) {
-    return this.request<{
-      user: { id: string; email: string; role: string };
-      profile: { id: string; name: string; phone: string; status: string } | null;
-      kyc: {
-        id: string;
-        status: string;
-        remarks: string | null;
-        photo_file: string | null;
-        address_proof_file: string | null;
-      } | null;
-      bank: {
-        id: string;
-        status: string;
-        remarks: string | null;
-        proof_file: string | null;
-      } | null;
-    }>(`/admin/engineers/${userId}`);
+    return this.request<EngineerDetails>(`/admin/engineers/${userId}`);
   }
 
   async approveEngineer(userId: string) {
@@ -122,6 +110,13 @@ class ApiClient {
     
     return this.request<{ message: string }>(
       `/admin/engineers/${userId}/reject${remarks ? `?${params}` : ""}`,
+      { method: "POST" }
+    );
+  }
+
+  async unholdEngineer(userId: string) {
+    return this.request<{ message: string }>(
+      `/admin/engineers/${userId}/unhold`,
       { method: "POST" }
     );
   }
