@@ -33,6 +33,7 @@ export default function Engineers() {
         skill_category: eng.skill_category || [],
         specializations: eng.specializations || [],
         preferred_city: eng.preferred_city,
+        current_location: eng.current_location,
       }));
       setEngineers(mappedEngineers);
     } catch (error) {
@@ -51,9 +52,12 @@ export default function Engineers() {
   }, []);
 
   const filteredEngineers = engineers.filter((eng) => {
+    const searchTerm = search.toLowerCase();
     const matchesSearch = 
-      eng.name?.toLowerCase().includes(search.toLowerCase()) ||
-      eng.user.email.toLowerCase().includes(search.toLowerCase());
+      eng.name?.toLowerCase().includes(searchTerm) ||
+      eng.user.email.toLowerCase().includes(searchTerm) ||
+      eng.preferred_city?.toLowerCase().includes(searchTerm) ||
+      eng.current_location?.toLowerCase().includes(searchTerm);
     const matchesStatus = statusFilter === "all" || eng.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -102,7 +106,8 @@ export default function Engineers() {
                 className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="all">All Status</option>
-                <option value="">Pending</option>
+                <option value="pending">Pending</option>
+
                
                 <option value="verified">Verified</option>
                 <option value="rejected">Rejected</option>

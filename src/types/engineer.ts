@@ -6,7 +6,16 @@ export interface Engineer {
   email?: string;
   status?: string;
   is_hold?: boolean;
+  preferred_city?: string;
+  current_location?: string;
+  skill_category?: string[];
+  specializations?: string[];
+  user: {
+    email: string;
+    role: string;
+  };
 }
+
 
 export interface EngineerProfile {
   id: string;
@@ -21,6 +30,8 @@ export interface EngineerProfile {
   isAvailable: boolean;
   status: string;
   is_hold: boolean;
+  dob?: string;
+  gender?: string;
 }
 
 export interface EngineerKyc {

@@ -1,5 +1,5 @@
-const API_BASE_URL = "https://engineer-xkt8.onrender.com";
-// const API_BASE_URL = "http://localhost:8000";
+// const API_BASE_URL = "https://engineer-xkt8.onrender.com";
+const API_BASE_URL = "http://localhost:8000";
 
 import { Engineer, EngineerDetails } from "@/types/engineer";
 
@@ -29,8 +29,9 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    const isFormData = options.body instanceof FormData;
     const headers: HeadersInit = {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...options.headers,
     };
 
@@ -141,6 +142,30 @@ class ApiClient {
       `/admin/bank/${userId}/status?${params}`,
       { method: "POST" }
     );
+  }
+
+  // New Edit/Upload methods
+  async updateEngineerProfile(userId: string, data: any) {
+    return this.request<{ message: string }>(`/admin/engineers/${userId}/profile`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async uploadEngineerKyc(userId: string, formData: FormData) {
+    return this.request<{ message: string }>(`/admin/engineers/${userId}/kyc`, {
+      method: "POST",
+      body: formData,
+      headers: {}, // Let fetch set the correct multipart boundary
+    });
+  }
+
+  async uploadEngineerBank(userId: string, formData: FormData) {
+    return this.request<{ message: string }>(`/admin/engineers/${userId}/bank`, {
+      method: "POST",
+      body: formData,
+      headers: {}, // Let fetch set the correct multipart boundary
+    });
   }
 }
 
